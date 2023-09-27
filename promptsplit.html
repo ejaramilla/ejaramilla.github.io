@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ChatGPT Prompt Splitter</title>
+    <style>
+        /* General Layout */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            overflow-x: hidden;  /* Hide horizontal scrollbar */
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        hr {
+            margin: 20px 0;
+        }
+
+        /* Container for form elements */
+        .form-container {
+            max-width: 800px;  /* Set max-width */
+            margin: 0 auto;  /* Center the container */
+        }
+
+        /* Form Layout */
+        label, textarea, input, button {
+            display: block;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        textarea, input {
+            width: 100%;
+            max-width: 800px;  /* Set max-width */
+            box-sizing: border-box;  /* Include padding and border in element's total width and height */
+            padding: 10px;
+        }
+
+        /* Button Styles */
+		button {
+			background-color: #4CAF50;
+			color: white;
+			padding: 12px 20px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+		}
+
+		button:disabled {
+			background-color: #cccccc;
+			color: #666666;
+			cursor: not-allowed;
+		}
+
+		button:hover {
+			background-color: #45a049;
+		}
+
+		button:disabled:hover {
+			background-color: #cccccc;
+			color: #666666;
+			cursor: not-allowed;
+		}
+
+        /* Button row styles */
+		#outputDiv {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			align-items: center;
+		}
+		.copy-button {
+			margin: 5px;
+		}
+        .copy-button.used {
+            background-color: gray;
+        }
+
+        /* Input validation styles */
+        .input-invalid {
+            border: 2px solid red;
+        }
+
+		/* Mobile-friendly adjustments */
+		@media only screen and (max-width: 600px) {
+			.form-container {
+				max-width: 100%;
+				padding: 10px;
+			}
+			textarea, input {
+				max-width: 100%;
+			}
+		}
+
+    </style>
+</head>
+<body>
+
+    <h1>ChatGPT Prompt Splitter</h1>
+
+    <div class="form-container">
+        <label for="promptText">Prompt:</label>
+        <textarea id="promptText" rows="4"></textarea>
+
+        <label for="inputText">Enter Large Text:</label>
+        <textarea id="inputText" rows="10"></textarea>
+
+        <label for="chunkSize">Chunk Size:</label>
+        <input type="number" id="chunkSize" value="15000">
+
+        <button class="split-button" onclick="splitText()">Split</button>
+    </div>
+
+    <hr />
+
+    <div id="outputDiv">
+        <!-- Output will be displayed here -->
+    </div>
+
+    <script>
+        function splitText() {
+            const inputTextElem = document.getElementById('inputText');
+            const promptTextElem = document.getElementById('promptText');
+            const chunkSizeElem = document.getElementById('chunkSize');
+            const inputText = inputTextElem.value;
+            const promptText = promptTextElem.value;
+            const chunkSize = chunkSizeElem.value;
+            const outputDiv = document.getElementById('outputDiv');
+
+            // Validate inputs
+            [inputTextElem, promptTextElem, chunkSizeElem].forEach(elem => {
+                if (elem.value === '') {
+                    elem.classList.add('input-invalid');
+                } else {
+                    elem.classList.remove('input-invalid');
+                }
+            });
+
+            // Clear previous output
+            outputDiv.innerHTML = '';
+
+            // Calculate number of chunks
+            const numOfChunks = Math.ceil(inputText.length / chunkSize);
+
+            for(let i = 0; i < numOfChunks; i++) {
+                // Prepare prefix and suffix for each chunk
+                let prefix = '', suffix = '';
+                if (inputText.length <= chunkSize) {
+                    prefix = `[START]\n\n`;
+                    suffix = `\n\n[END]\n\n` + promptText;
+                } else {
+                    if (i < numOfChunks - 1) {
+                        prefix = `Do not answer yet. This is just another part of the text I want to send you. Just receive and acknowledge as "Part ${i+1}/${numOfChunks} received" and wait for the next part.\n[START PART ${i+1}/${numOfChunks}]\n\n`;
+                        suffix = `\n\n[END PART ${i+1}/${numOfChunks}] \nRemember not answering yet. Just acknowledge you received this part with the message "Part ${i+1}/${numOfChunks} received" and wait for the next part.`;
+                    } else {
+                        prefix = `[START PART ${i+1}/${numOfChunks}]\n\n`;
+                        suffix = `\n\n[END PART ${i+1}/${numOfChunks}]\nALL PARTS SENT. \n\n${promptText}`;
+                    }
+                }
+
+                // Create copy button for each chunk
+                const copyButton = document.createElement('button');
+                copyButton.className = 'copy-button';
+                copyButton.innerText = `Copy part ${i+1} of ${numOfChunks} to clipboard`;
+                copyButton.addEventListener('click', function() {
+                    copyToClipboard(prefix + inputText.slice(i * chunkSize, (i + 1) * chunkSize) + suffix);
+                    this.classList.add('used');
+                });
+
+                // Append copy button to output div
+                outputDiv.appendChild(copyButton);
+            }
+        }
+
+        function copyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+		
+		document.addEventListener("DOMContentLoaded", function() {
+		const inputTextElem = document.getElementById('inputText');
+		const promptTextElem = document.getElementById('promptText');
+		const chunkSizeElem = document.getElementById('chunkSize');
+		const splitButton = document.querySelector('.split-button');
+
+		// Initially disable the Split button
+		splitButton.disabled = true;
+
+		// Enable/Disable the button based on inputs
+		function checkInputs() {
+			if (inputTextElem.value !== '' && promptTextElem.value !== '' && chunkSizeElem.value !== '') {
+				splitButton.disabled = false;
+			} else {
+				splitButton.disabled = true;
+			}
+		}
+
+		// Attach event listeners to input fields
+		[inputTextElem, promptTextElem, chunkSizeElem].forEach(elem => {
+			elem.addEventListener('input', checkInputs);
+			});
+		});
+    </script>
+
+</body>
+</html>
