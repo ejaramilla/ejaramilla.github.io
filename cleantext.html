@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Text Formatter</title>
+<style>
+        /* General Layout */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            overflow-x: hidden;  /* Hide horizontal scrollbar */
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        hr {
+            margin: 20px 0;
+        }
+ 
+        /* Container for form elements */
+        .form-container {
+            max-width: 800px;  /* Set max-width */
+            margin: 0 auto;  /* Center the container */
+        }
+ 
+        /* Form Layout */
+        label, textarea, input, button {
+            display: block;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        /* Form Layout */
+        .editableArea {
+            width: 100%;
+            max-width: 800px;  /* Set max-width */
+            box-sizing: border-box;  /* Include padding and border in element's total width and height */
+            padding: 10px;
+            margin-bottom: 20px;
+            display: block;
+        }
+ 
+        /* Button Styles */
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+ 
+        button:disabled {
+            background-color: #cccccc;
+            color: #666666;
+            cursor: not-allowed;
+        }
+ 
+        button:hover {
+            background-color: #45a049;
+        }
+ 
+        button:disabled:hover {
+            background-color: #cccccc;
+            color: #666666;
+            cursor: not-allowed;
+        }
+ 
+        /* Centering the button and output area */
+        .button-container, #outputArea {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+ 
+        /* Mobile-friendly adjustments */
+        @media only screen and (max-width: 600px) {
+            .editableArea, .button-container {
+                max-width: 100%;
+            }
+        }
+ 
+        #inputArea, #outputArea {
+            border: 1px solid #ccc;
+            min-height: 100px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+ 
+        #outputArea {
+            background-color: #f8f8f8; /* Light grey background for output area */
+        }
+ 
+    </style>
+</head>
+<body>
+<h1>Text Formatter</h1>
+<div class="form-container">
+<label for="inputArea">Input Text:</label>
+<div contenteditable="true" id="inputArea" class="editableArea" onkeyup="checkInputContent()"></div>
+<div class="button-container">
+<button id="cleanButton" onclick="cleanText()" disabled>Clean Text</button>
+</div>
+<hr />
+<label for="outputArea">Output Text:</label>
+<div contenteditable="false" id="outputArea" class="editableArea"></div> <!-- Note the change here -->
+<div class="button-container">
+<button id="copyButton" onclick="copyToClipboard()" disabled>Copy Text</button>
+</div>
+</div>
+ 
+    <script>
+        function checkInputContent() {
+            var inputContent = document.getElementById('inputArea').innerText.trim();
+            document.getElementById('cleanButton').disabled = inputContent === '';
+        }
+ 
+        function cleanText() {
+            var inputContent = document.getElementById('inputArea').innerHTML;
+            var cleanedContent = inputContent.replace(/<span.*?>|<\/span>|style="[^"]*"/gi, '');
+            var outputArea = document.getElementById('outputArea');
+            outputArea.innerHTML = cleanedContent;
+            outputArea.contentEditable = true; // Enable editing after cleaning
+            checkOutputContent();
+        }
+ 
+        function checkOutputContent() {
+            var outputContent = document.getElementById('outputArea').innerText.trim();
+            document.getElementById('copyButton').disabled = outputContent === '';
+        }
+ 
+        function copyToClipboard() {
+            var outputContent = document.getElementById('outputArea');
+            window.getSelection().selectAllChildren(outputContent);
+            document.execCommand("Copy");
+            alert("Text copied to clipboard");
+        }
+ 
+        checkInputContent();
+</script>
+</body>
+</html>
